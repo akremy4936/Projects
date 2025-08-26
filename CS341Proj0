@@ -1,0 +1,248 @@
+/*                                                                                                                                                                                                    
+Name: Akrem Yusuf                                                                                                                                                                                     
+  This is the course.cpp file. It contains both the Course and Section class implementations.                                                                                                         
+                                                                                                                                                                                                      
+ */
+#include "course.h"
+Course::Course(){
+  m_maxNumSections=DEFNUMSECTIONS;
+  m_numSections=0;
+  m_course = nullptr;
+}
+Course::Course(int maxNumSections){
+  m_maxNumSections = maxNumSections;
+  m_course = new Section*[m_maxNumSections];
+  for(int i=0; i<maxNumSections; i++){
+   m_course[i] = nullptr;
+ }
+}
+Course::~Course(){
+  if(m_course) {
+    for(int i=0; i<m_numSections; i++){
+      delete m_course[i];
+    }
+  delete[] m_course;
+  m_course = nullptr;
+  }
+}
+bool Course::insertSection(int ID, string instructor, int numItems, int numStudents){
+  if(getSection(ID) != nullptr) {
+    return false;
+  }
+
+  if(m_numSections >= DEFNUMSECTIONS){
+    return false;
+    }
+
+  m_course[m_numSections] = new Section(ID, instructor, numItems, numStudents);
+  m_numSections++;
+  return true;
+}
+
+bool Course::insertSection(Section * & aSection){
+  if(getSection(aSection->m_sectionID) != nullptr){
+    return false;
+  }
+  if(m_numSections >= m_maxNumSections){
+    return false;
+  }
+  m_course[m_numSections] = new Section(*aSection);
+  m_numSections++;
+
+  return true;
+}
+
+bool Course::removeSection(int sectionID){
+  Section *remove = getSection(sectionID);
+
+  if(remove != nullptr){
+    for(int i=0; i<m_numSections; i++){
+      if(m_course[i]==remove){
+        delete m_course[i];
+        m_course[i]=nullptr;
+        for(int j=i; j<m_numSections-1;j++){
+          m_course[j]=m_course[j+1];
+      }
+        m_numSections--;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+double Course::courseAverage(){
+  int totalStudents;
+  double totalScore;
+  if(m_numSections == 0){
+    double avg = 0.0;
+    return avg;
+  }
+  for(int i = 0; i<m_numSections; i++){
+    Section *section = getSection(m_course[i]->m_sectionID);
+    if(section){
+      totalStudents += section->m_numStudents;
+      totalScore += section->m_sectionID;
+    return totalScore/totalStudents;
+    }
+  }
+  if(totalStudents = 0)
+    return 0;
+  return totalScore/totalStudents;
+
+}
+Section * Course::getSection(int sectionID) const{
+  if(!m_course){
+    for(int i=0;i<m_numSections; i++){
+      if(m_course[i] && m_course[i]->m_sectionID==sectionID){
+        return m_course[i];
+      }
+    }
+  }
+  return nullptr;
+}
+Section::Section(){
+  m_sectionID=0;
+  m_instructor="";
+  m_numGradingItems=0;
+  m_numStudents=0;
+  m_section=nullptr;
+}
+
+Section::Section(int ID, string instructor, int items, int students) {
+  if (ID <= 0 || instructor.empty() || items <= 0 || students <= 0) {
+        m_numStudents = 0;
+        m_numGradingItems = 0;
+        m_section = nullptr;
+        m_sectionID = 0;
+        return;
+    }
+
+    m_numStudents = students;
+    m_numGradingItems = items;
+    m_sectionID = ID;
+    m_instructor = instructor;
+
+    m_section = new double*[m_numStudents];
+    for (int i = 0; i < m_numStudents; ++i) {
+        m_section[i] = new double[m_numGradingItems];
+    }
+}
+
+Section::~Section(){
+  if(m_section){
+    for(int i=0;i<m_numStudents;i++){
+      delete[] m_section[i];
+  }
+  delete[] m_section;
+  m_section=nullptr;
+  }
+}
+void Section::clear(){
+  if(m_section){
+    for(int i=0; i<m_numStudents;i++){
+      delete[] m_section[i];
+    }
+    delete[] m_section;
+    m_section=nullptr;
+  }
+  m_sectionID=0;
+  m_instructor="";
+  m_numGradingItems=0;
+  m_numStudents=0;
+}
+void Section::simulateData(){
+  if(!m_section)
+    return;
+  Random randgen(0,100, RANDOM::UNIFORMREAL);
+  for(int i=0;i<m_numStudents;i++){
+    for(int j=0;j<m_numGradingItems;j++){
+      m_section[i][j]=randgen.getRealRandNum();
+    }
+  }
+}
+
+double Section::studentAverage(int student){
+  double total=0;
+  for(int i=0;i<m_numGradingItems;i++){
+    total +=m_section[student][i];
+  }
+  return total/m_numGradingItems;
+}
+
+double Section::testAverage(int test) {
+    if (test < 0 || test >= m_numGradingItems) {
+        return -1;
+    }
+
+    double total = 0;
+    for (int i = 0; i<m_numStudents; i++) {
+        total += m_section[i][test];
+    }
+    return total/m_numStudents;
+}
+
+double Section::classAverage(){
+  double total=0;
+  if (m_numStudents == 0 || m_numGradingItems == 0) {
+    return 0.0;
+  }
+  for(int i=0;i<m_numStudents; i++){
+    for(int j=0;j<m_numGradingItems;j++){
+      total+=m_section[i][j];
+    }
+  }
+  return total/(m_numStudents * m_numGradingItems);
+}
+Section::Section(const Section& rhs){
+  m_sectionID=rhs.m_sectionID;
+  m_instructor=rhs.m_instructor;
+  m_numStudents=rhs.m_numStudents;
+  m_numGradingItems=rhs.m_numGradingItems;
+  m_section = new double*[m_numStudents];
+  for(int i=0;i<m_numStudents;++i){
+    m_section[i]= new double(m_numGradingItems);
+    for(int j=0;j<m_numGradingItems; ++j){
+      m_section[i][j]=rhs.m_section[i][j];
+    }
+  }
+}
+const Section& Section::operator=(const Section& rhs) {
+  if (this != &rhs) {
+    for (int i = 0; i < m_numStudents; ++i) {
+      delete[] m_section[i];
+    }
+    delete[] m_section;
+    m_numStudents = rhs.m_numStudents;
+    m_numGradingItems = rhs.m_numGradingItems;
+    m_sectionID = rhs.m_sectionID;
+    m_instructor = rhs.m_instructor;
+
+    m_section = new double*[m_numStudents];
+    for (int i = 0; i < m_numStudents; ++i) {
+      m_section[i] = new double[m_numGradingItems];
+      for (int j = 0; j < m_numGradingItems; ++j) {
+        m_section[i][j] = rhs.m_section[i][j];
+      }
+    }
+  }
+  return *this;
+}
+
+void Section::dump(){
+    if (m_numGradingItems > 0 && m_numStudents > 0 && m_section != nullptr){
+        cout << setw(8) << "        ";
+        for (int a=1;a<=m_numGradingItems;a++)
+            cout << setw(8) << "Test" << a;
+        cout << endl;
+        for (int i=1;i <= m_numStudents;i++){
+            cout << setw(8) << "Student" << i << " ";
+            for (int j=1;j<=m_numGradingItems;j++){
+                cout << setw(8) << m_section[i-1][j-1] << " ";
+            }
+            cout << endl;
+        }
+    }
+}
+
+
+
